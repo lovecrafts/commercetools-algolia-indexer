@@ -1,0 +1,22 @@
+{
+    "name": "eswar-algoliya",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "type": "module",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@commercetools/category-exporter": "^3.0.22",
+        "@commercetools/product-exporter": "^3.1.12",
+        "@commercetools/product-json-to-csv": "^5.0.16",
+        "algoliasearch": "^4.10.3",
+        "node-fetch": "^2.6.1",
+        "require": "^2.4.20",
+        "stream-json": "^1.7.2"
+    }
+}
