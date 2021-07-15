@@ -2,24 +2,39 @@ import ProductExporter from '@commercetools/product-exporter'
 import fs from 'fs'
 import algoliasearch from 'algoliasearch'
 const client = algoliasearch('RA46FT2Q5G', '69a1fff0143c7121bc2f35825680b272')
-const index = client.initIndex('CTL_Syn_test')
+const index = client.initIndex('CTL-VueStoredata-experiment-products')
 
 
 const apiConfig = {
+
+    // Newstore projectKey
+    // -----------------------------
+
     apiUrl: 'https://api.us-central1.gcp.commercetools.com',
     host: 'https://auth.us-central1.gcp.commercetools.com',
     authUrl: 'https://auth.us-central1.gcp.commercetools.com',
-    projectKey: 'ccx_sunrise',
+    projectKey: 'ccx_ctvsfn',
     credentials: {
-        clientId: 'vSpnS-bOTfq4Bcz3EHO5KczW',
-        clientSecret: 'fF4kHHQSVSmuoPBd-ZlNsVPeZrZzVMYu',
+        clientId: 'szt9IDwGJJqcHlOM5w5cYq2g',
+        clientSecret: 'LO51Wbl2a00yq93LtsRySuQ9RDoqbdEA',
     }
+
+    //sunrise project
+    //----------------------
+    // apiUrl: 'https://api.us-central1.gcp.commercetools.com',
+    // host: 'https://auth.us-central1.gcp.commercetools.com',
+    // authUrl: 'https://auth.us-central1.gcp.commercetools.com',
+    // projectKey: 'ccx_sunrise',
+    // credentials: {
+    //     clientId: 'vSpnS-bOTfq4Bcz3EHO5KczW',
+    //     clientSecret: 'fF4kHHQSVSmuoPBd-ZlNsVPeZrZzVMYu',
+    // }
 }
 const exportConfig = {
-    batch: 5,
+    batch: 10,
     json: true,
     staged: true,
-    total: 5,
+    total: 100,
 }
 const logger = {
     error: console.error,
@@ -27,7 +42,7 @@ const logger = {
     info: console.log,
     debug: console.debug,
 }
-const accessToken = 'PkAXtg8S4W0MLo0nt6m8sHPG21piVc5g'
+const accessToken = '2fret8wLphlSV4ZNkF8sR2UMzHFpEPux'
 
 const productExporter = new ProductExporter.default(
     apiConfig,
@@ -63,28 +78,68 @@ outputStream.on('finish', () => {
             for (let product of products) {
                 product.color = [];
                 product.commonSize = [];
+                product.Fabric = [];
+                product.Prices = [];
 
+                if (product.masterVariant.prices)
+                    for (var price of product.masterVariant.prices) {
+                        if (price.value.currencyCode == "USD")
+                            product.Price = (price.value.centAmount / 100);
+
+                        if (!product.Prices.includes(price.value))
+                            product.Prices.push(price.value);
+                    }
+                if (product.variants.prices)
+                    for (var price of product.variants.prices) {
+                        if (!product.Prices.includes(price.value))
+                            product.Prices.push(price.value);
+
+                    }
                 for (var attribute of product.masterVariant.attributes) {
+
+                    if (attribute.name == "Fabric") {
+                        for (let obj of attribute.value) {
+                            if (!product.Fabric.includes(obj.key.toString()))
+                                product.Fabric.push(obj.key.toString());
+                        }
+                    }
+
                     if (attribute.name == "color") {
-                        if (!product.color.includes(attribute.value.key.toString()))
-                            product.color.push(attribute.value.key.toString());
+
+                        for (let obj of attribute.value) {
+                            if (!product.color.includes(obj.key.toString()))
+                                product.color.push(obj.key.toString());
+                        }
                     }
 
                     if (attribute.name == "commonSize")
-                        if (!product.commonSize.includes(attribute.value.key.toString()))
-                            product.commonSize.push(attribute.value.key.toString());
+                        for (let obj of attribute.value) {
+                            if (!product.commonSize.includes(obj.key.toString()))
+                                product.commonSize.push(obj.key.toString());
+                        }
 
                 }
                 for (var variant of product.variants) {
                     for (var attribute of variant.attributes) {
+                        if (attribute.name == "Fabric") {
+                            for (let obj of attribute.value) {
+                                if (!product.Fabric.includes(obj.key.toString()))
+                                    product.Fabric.push(obj.key.toString());
+                            }
+                        }
+
                         if (attribute.name == "color") {
-                            if (!product.color.includes(attribute.value.key.toString()))
-                                product.color.push(attribute.value.key.toString());
+                            for (let obj of attribute.value) {
+                                if (!product.color.includes(obj.key.toString()))
+                                    product.color.push(obj.key.toString());
+                            }
                         }
 
                         if (attribute.name == "commonSize")
-                            if (!product.commonSize.includes(attribute.value.key.toString()))
-                                product.commonSize.push(attribute.value.key.toString());
+                            for (let obj of attribute.value) {
+                                if (!product.commonSize.includes(obj.key.toString()))
+                                    product.commonSize.push(obj.key.toString());
+                            }
                     }
                 }
 
@@ -107,14 +162,16 @@ outputStream.on('finish', () => {
                 finalproducts.push(product);
             }
 
-            index
-                .saveObjects(finalproducts, { autoGenerateObjectIDIfNotExist: true })
-                .then(() => {
+            // index
+            //     .saveObjects(finalproducts, { autoGenerateObjectIDIfNotExist: true })
+            //     .then(() => {
 
-                })
-                .catch(err => {
-                    console.log(err);
-                });
+            //     })
+            //     .catch(err => {
+            //         console.log(err);
+            //     });
+
+
             fs.writeFile('finalproducts.json', JSON.stringify(finalproducts), 'utf8', function(err) {
                 if (err) {
                     return console.log(err);
@@ -124,55 +181,6 @@ outputStream.on('finish', () => {
 
         });
 
-        // fs.readFile('products.txt', (err, data) => {
-        //     if (err) throw err;
-
-        //     let products = JSON.stringify(data);
-        //     console.log(products);
-        //     var finalproducts = []
-        //     for (let product of products) {
-        //         let k = product.categories.length;
-        //         if (k != 0) {
-        //             console.log(product, product.categories[(k != 0 ? k - 1 : k)]);
-        //             let parent_cat = categories.filter(x => x.id == product.categories[(k != 0 ? k - 1 : k)].id)[0];
-        //             product.categories.push(parent_cat.parent);
-        //         }
-        //     }
-        //     for (let product of products) {
-        //         let j = 0;
-        //         let k = product.categories.length;
-        //         for (let cat of product.categories) {
-        //             if (cat) {
-        //                 var obj = categories.filter(x => x.id == cat.id)[0];
-        //                 product.categories[j].slug = obj.slugURL;
-        //                 product.categories[j]['lvl' + (k != 0 ? k - 1 : k)] = obj.categoryURL;
-        //                 j++;
-        //                 k--;
-        //             }
-        //         }
-        //         if (product.categories[0]) {
-        //             var h_categories = categories.filter(x => product.categories[0].id == x.id)[0].categories;
-        //             product.hierarchicalCategories = h_categories;
-        //         } else
-        //             product.hierarchicalCategories = [];
-        //         finalproducts.push(product);
-        //     }
-        //     index
-        //         .saveObjects(finalproducts, { autoGenerateObjectIDIfNotExist: true })
-        //         .then(() => {
-
-        //         })
-        //         .catch(err => {
-        //             console.log(err);
-        //         });
-
-        //     fs.writeFile('finalproducts.json', JSON.stringify(products), 'utf8', function(err) {
-        //         if (err) {
-        //             return console.log(err);
-        //         }
-        //         console.log("The file was saved!");
-        //     });
-        // });
     })
 })
 
