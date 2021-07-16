@@ -89,12 +89,17 @@ outputStream.on('finish', () => {
                         // if (!product.Prices.includes(price.value))
                         //     product.Prices.push(price.value);
                     }
-                    // if (product.variants.prices)
-                    //     for (var price of product.variants.prices) {
-                    //         if (!product.Prices.includes(price.value))
-                    //             product.Prices.push(price.value);
-
-                //     }
+                let inc = 0;
+                if (product.variants)
+                    for (var variant of product.variants) {
+                        if (variant.prices) {
+                            for (let price of variant.prices) {
+                                if (price.value.currencyCode == "USD")
+                                    product.variants[inc].price = price.value;
+                            }
+                        }
+                        inc++;
+                    }
                 for (var attribute of product.masterVariant.attributes) {
 
                     if (attribute.name == "Fabric") {
