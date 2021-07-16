@@ -79,18 +79,10 @@ outputStream.on('finish', () => {
                 product.color = [];
                 product.commonSize = [];
                 product.Fabric = [];
-                // product.Prices = [];
 
-                if (product.masterVariant.prices)
-                    for (var price of product.masterVariant.prices) {
-                        if (price.value.currencyCode == "USD")
-                            product.masterVariant.price = price.value;
-
-                        // if (!product.Prices.includes(price.value))
-                        //     product.Prices.push(price.value);
-                    }
+                product.variants.push(product.masterVariant);
                 let inc = 0;
-                if (product.variants)
+                if (product.variants) {
                     for (var variant of product.variants) {
                         if (variant.prices) {
                             for (let price of variant.prices) {
@@ -98,54 +90,30 @@ outputStream.on('finish', () => {
                                     product.variants[inc].price = price.value;
                             }
                         }
+
+                        for (var attribute of variant.attributes) {
+                            if (attribute.name == "Fabric") {
+                                product.variants[inc].Fabric = attribute.value.key;
+                                if (!product.Fabric.includes(attribute.value.key))
+                                    product.Fabric.push(attribute.value.key);
+                            }
+
+                            if (attribute.name == "color") {
+                                product.variants[inc].color = attribute.value.key;
+                                if (!product.color.includes(attribute.value.key))
+                                    product.color.push(attribute.value.key);
+                            }
+
+                            if (attribute.name == "commonSize") {
+                                product.variants[inc].commonSize = attribute.value.key;
+                                if (!product.commonSize.includes(attribute.value.key))
+                                    product.commonSize.push(attribute.value.key);
+                            }
+
+                        }
                         inc++;
                     }
-                for (var attribute of product.masterVariant.attributes) {
-
-                    if (attribute.name == "Fabric") {
-                        for (let obj of attribute.value) {
-                            if (!product.Fabric.includes(obj.key.toString()))
-                                product.Fabric.push(obj.key.toString());
-                        }
-                    }
-
-                    if (attribute.name == "color") {
-
-                        for (let obj of attribute.value) {
-                            if (!product.color.includes(obj.key.toString()))
-                                product.color.push(obj.key.toString());
-                        }
-                    }
-
-                    if (attribute.name == "commonSize")
-                        for (let obj of attribute.value) {
-                            if (!product.commonSize.includes(obj.key.toString()))
-                                product.commonSize.push(obj.key.toString());
-                        }
-
-                }
-                for (var variant of product.variants) {
-                    for (var attribute of variant.attributes) {
-                        if (attribute.name == "Fabric") {
-                            for (let obj of attribute.value) {
-                                if (!product.Fabric.includes(obj.key.toString()))
-                                    product.Fabric.push(obj.key.toString());
-                            }
-                        }
-
-                        if (attribute.name == "color") {
-                            for (let obj of attribute.value) {
-                                if (!product.color.includes(obj.key.toString()))
-                                    product.color.push(obj.key.toString());
-                            }
-                        }
-
-                        if (attribute.name == "commonSize")
-                            for (let obj of attribute.value) {
-                                if (!product.commonSize.includes(obj.key.toString()))
-                                    product.commonSize.push(obj.key.toString());
-                            }
-                    }
+                    product.variants.sort((a, b) => a.id - b.id);
                 }
 
                 let j = 0;
