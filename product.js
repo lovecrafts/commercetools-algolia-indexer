@@ -79,22 +79,22 @@ outputStream.on('finish', () => {
                 product.color = [];
                 product.commonSize = [];
                 product.Fabric = [];
-                product.Prices = [];
+                // product.Prices = [];
 
                 if (product.masterVariant.prices)
                     for (var price of product.masterVariant.prices) {
                         if (price.value.currencyCode == "USD")
-                            product.Price = (price.value.centAmount / 100);
+                            product.masterVariant.price = price.value;
 
-                        if (!product.Prices.includes(price.value))
-                            product.Prices.push(price.value);
+                        // if (!product.Prices.includes(price.value))
+                        //     product.Prices.push(price.value);
                     }
-                if (product.variants.prices)
-                    for (var price of product.variants.prices) {
-                        if (!product.Prices.includes(price.value))
-                            product.Prices.push(price.value);
+                    // if (product.variants.prices)
+                    //     for (var price of product.variants.prices) {
+                    //         if (!product.Prices.includes(price.value))
+                    //             product.Prices.push(price.value);
 
-                    }
+                //     }
                 for (var attribute of product.masterVariant.attributes) {
 
                     if (attribute.name == "Fabric") {
