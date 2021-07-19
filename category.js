@@ -3,23 +3,23 @@ import fs from 'fs'
 
 const options = {
     apiConfig: {
-        apiUrl: 'https://api.us-central1.gcp.commercetools.com',
-        host: 'https://auth.us-central1.gcp.commercetools.com',
-        authUrl: 'https://auth.us-central1.gcp.commercetools.com',
-        projectKey: 'ccx_ctvsfn',
-        credentials: {
-            clientId: 'szt9IDwGJJqcHlOM5w5cYq2g',
-            clientSecret: 'LO51Wbl2a00yq93LtsRySuQ9RDoqbdEA',
-        }
-
         // apiUrl: 'https://api.us-central1.gcp.commercetools.com',
         // host: 'https://auth.us-central1.gcp.commercetools.com',
         // authUrl: 'https://auth.us-central1.gcp.commercetools.com',
-        // projectKey: 'ccx_sunrise',
+        // projectKey: 'ccx_ctvsfn',
         // credentials: {
-        //     clientId: 'vSpnS-bOTfq4Bcz3EHO5KczW',
-        //     clientSecret: 'fF4kHHQSVSmuoPBd-ZlNsVPeZrZzVMYu',
+        //     clientId: 'szt9IDwGJJqcHlOM5w5cYq2g',
+        //     clientSecret: 'LO51Wbl2a00yq93LtsRySuQ9RDoqbdEA',
         // }
+
+        apiUrl: 'https://api.us-central1.gcp.commercetools.com',
+        host: 'https://auth.us-central1.gcp.commercetools.com',
+        authUrl: 'https://auth.us-central1.gcp.commercetools.com',
+        projectKey: 'ccx_sunrise',
+        credentials: {
+            clientId: 'vSpnS-bOTfq4Bcz3EHO5KczW',
+            clientSecret: 'fF4kHHQSVSmuoPBd-ZlNsVPeZrZzVMYu',
+        }
     },
 
 }
@@ -110,7 +110,7 @@ outputStream.on('finish', () => {
             parent_object.id = category.id;
             parent_object.name = category.name.en;
             parent_object.slug = category.slug.en
-            console.log(category, 'category')
+                //console.log(category, 'category')
             let slug_url_str = "";
             let cat_url_str = "";
             for (let cat_slug_level of category.ancestors) {
@@ -134,7 +134,7 @@ outputStream.on('finish', () => {
                 i++;
             }
             jsonVariable['lvl' + i] = rootstr + category.name.en;
-            console.log(rootstr + category.name.en)
+            //console.log(rootstr + category.name.en)
             object.push(jsonVariable);
             parent_object.categories = object;
             parent_object.categories_level = i;

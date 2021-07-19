@@ -10,39 +10,43 @@ const apiConfig = {
     // Newstore projectKey
     // -----------------------------
 
-    apiUrl: 'https://api.us-central1.gcp.commercetools.com',
-    host: 'https://auth.us-central1.gcp.commercetools.com',
-    authUrl: 'https://auth.us-central1.gcp.commercetools.com',
-    projectKey: 'ccx_ctvsfn',
-    credentials: {
-        clientId: 'szt9IDwGJJqcHlOM5w5cYq2g',
-        clientSecret: 'LO51Wbl2a00yq93LtsRySuQ9RDoqbdEA',
-    }
-
-    //sunrise project
-    //----------------------
     // apiUrl: 'https://api.us-central1.gcp.commercetools.com',
     // host: 'https://auth.us-central1.gcp.commercetools.com',
     // authUrl: 'https://auth.us-central1.gcp.commercetools.com',
-    // projectKey: 'ccx_sunrise',
+    // projectKey: 'ccx_ctvsfn',
     // credentials: {
-    //     clientId: 'vSpnS-bOTfq4Bcz3EHO5KczW',
-    //     clientSecret: 'fF4kHHQSVSmuoPBd-ZlNsVPeZrZzVMYu',
+    //     clientId: 'szt9IDwGJJqcHlOM5w5cYq2g',
+    //     clientSecret: 'LO51Wbl2a00yq93LtsRySuQ9RDoqbdEA',
     // }
+
+    // sunrise project
+    // -- -- -- -- -- -- -- -- -- -- --
+
+    apiUrl: 'https://api.us-central1.gcp.commercetools.com',
+    host: 'https://auth.us-central1.gcp.commercetools.com',
+    authUrl: 'https://auth.us-central1.gcp.commercetools.com',
+    projectKey: 'ccx_sunrise',
+    credentials: {
+        clientId: 'vSpnS-bOTfq4Bcz3EHO5KczW',
+        clientSecret: 'fF4kHHQSVSmuoPBd-ZlNsVPeZrZzVMYu',
+    }
 }
 const exportConfig = {
-    batch: 10,
+    batch: 100,
     json: true,
     staged: true,
-    total: 100,
+    total: 3000,
 }
 const logger = {
-    error: console.error,
-    warn: console.warn,
-    info: console.log,
-    debug: console.debug,
-}
-const accessToken = '2fret8wLphlSV4ZNkF8sR2UMzHFpEPux'
+        error: console.error,
+        warn: console.warn,
+        info: console.log,
+        debug: console.debug,
+    }
+    //const accessToken = 'wiDZ59C5F7wyNtjkXtIdjVKeP9UrqO8s';
+
+// sunrise data
+const accessToken = 'zIjOoI_das8yZcoOhHt0z-jG5Yid74-V'
 
 const productExporter = new ProductExporter.default(
     apiConfig,
@@ -66,6 +70,7 @@ outputStream.on('finish', () => {
             productDatas += data.replace(/\n/g, ",");
             productDatas += "]";
             var products = JSON.parse(productDatas);
+            var fproducts = [];
             var finalproducts = []
             for (let product of products) {
 
@@ -132,11 +137,32 @@ outputStream.on('finish', () => {
                     product.hierarchicalCategories = h_categories;
                 } else
                     product.hierarchicalCategories = [];
-                finalproducts.push(product);
+                fproducts.push(product);
             }
+            for (let product of fproducts) {
+                for (let variant of product.variants) {
+                    var resultdata = {
+                        parentId: product.id, // I
+                        name: product.name, // I
+                        description: product.description, // I
+                        slug: product.slug, // I
+                        sku: variant.sku, // V
+                        categories: product.categories, // I
+                        hierarchicalCategories: product.hierarchicalCategories, // I                       
+                        color: variant.color, // V
+                        commonSize: variant.commonSize, // V
+                        Fabric: variant.Fabric, // V
+                        price: variant.price, // V
+                        images: variant.images, // V
+                    };
+                    finalproducts.push(resultdata);
 
+                }
+
+
+            }
             // index
-            //     .saveObjects(finalproducts, { autoGenerateObjectIDIfNotExist: true })
+            //     .saveObjects(fproducts, { autoGenerateObjectIDIfNotExist: true })
             //     .then(() => {
 
             //     })
