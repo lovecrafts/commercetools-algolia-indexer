@@ -1,0 +1,1 @@
+this folder datas will be moved to algolia index

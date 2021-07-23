@@ -1,11 +1,11 @@
 import customExporter from './customExporter.js'
 import fs from 'fs'
 import algoliasearch from 'algoliasearch'
-const client = algoliasearch('RA46FT2Q5G', '69a1fff0143c7121bc2f35825680b272')
-const index = client.initIndex('test_sync_data')
 import dotenv from "dotenv";
 import path from 'path'
 dotenv.config();
+const client = algoliasearch(process.env.ALGOLIA_PROJECT_ID, process.env.ALGOLIA_WRITE_KEY)
+const index = client.initIndex(process.env.ALGOLIA_INDEX_NAME)
 
 const apiConfig = {
     // sunrise project
@@ -21,10 +21,10 @@ const apiConfig = {
     }
 }
 const exportConfig = {
-    batch: parseInt(process.env.BATCH_COUNT),
+    batch: parseInt(process.env.PRODUCTS_PER_BATCH),
     json: true,
     staged: true,
-    total: parseInt(process.env.TOTAL_RECORDS),
+    total: parseInt(process.env.TOTAL_PRODUCTS),
 }
 const logger = {
     error: console.error,
@@ -146,7 +146,6 @@ outputStream.on('finish', () => {
 
         }
         if (finalproducts) {
-            console.log('sync called')
             sendtoalgolia(path.join('./data', file), path.join('./dest', file), finalproducts);
 
         }

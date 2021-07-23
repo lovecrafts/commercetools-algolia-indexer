@@ -1,24 +1,17 @@
 import CategoryExporter from "@commercetools/category-exporter"
 import fs from 'fs'
-
+import dotenv from "dotenv";
+dotenv.config();
 const options = {
     apiConfig: {
-        // apiUrl: 'https://api.us-central1.gcp.commercetools.com',
-        // host: 'https://auth.us-central1.gcp.commercetools.com',
-        // authUrl: 'https://auth.us-central1.gcp.commercetools.com',
-        // projectKey: 'ccx_ctvsfn',
-        // credentials: {
-        //     clientId: 'szt9IDwGJJqcHlOM5w5cYq2g',
-        //     clientSecret: 'LO51Wbl2a00yq93LtsRySuQ9RDoqbdEA',
-        // }
 
-        apiUrl: 'https://api.us-central1.gcp.commercetools.com',
-        host: 'https://auth.us-central1.gcp.commercetools.com',
-        authUrl: 'https://auth.us-central1.gcp.commercetools.com',
-        projectKey: 'ccx_sunrise',
+        apiUrl: process.env.API_URL,
+        host: process.env.HOST,
+        authUrl: process.env.AUTH_URL,
+        projectKey: process.env.PROJECT_KEY,
         credentials: {
-            clientId: 'vSpnS-bOTfq4Bcz3EHO5KczW',
-            clientSecret: 'fF4kHHQSVSmuoPBd-ZlNsVPeZrZzVMYu',
+            clientId: process.env.CLIENT_ID,
+            clientSecret: process.env.CLIENT_SECRECT,
         }
     },
 
