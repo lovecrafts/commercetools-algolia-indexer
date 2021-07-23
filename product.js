@@ -33,10 +33,10 @@ const apiConfig = {
     }
 }
 const exportConfig = {
-    batch: 10,
+    batch: parseInt(process.env.BATCH_COUNT),
     json: true,
     staged: true,
-    total: 20,
+    total: parseInt(process.env.TOTAL_RECORDS),
 }
 const logger = {
         error: console.error,
@@ -47,7 +47,7 @@ const logger = {
     //const accessToken = 'wiDZ59C5F7wyNtjkXtIdjVKeP9UrqO8s';
 
 // sunrise data
-const accessToken = 'Kx0VUukZm0kCl6kBzD1-3nt-xqKmORFC'
+const accessToken = process.env.ACCESS_TOKEN; //'Kx0VUukZm0kCl6kBzD1-3nt-xqKmORFC'
 
 const productExporter = new ProductExporter.default(
     apiConfig,
