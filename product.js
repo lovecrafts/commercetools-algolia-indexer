@@ -7,19 +7,6 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const apiConfig = {
-
-    // Newstore projectKey
-    // -----------------------------
-
-    // apiUrl: 'https://api.us-central1.gcp.commercetools.com',
-    // host: 'https://auth.us-central1.gcp.commercetools.com',
-    // authUrl: 'https://auth.us-central1.gcp.commercetools.com',
-    // projectKey: 'ccx_ctvsfn',
-    // credentials: {
-    //     clientId: 'szt9IDwGJJqcHlOM5w5cYq2g',
-    //     clientSecret: 'LO51Wbl2a00yq93LtsRySuQ9RDoqbdEA',
-    // }
-
     // sunrise project
     // -- -- -- -- -- -- -- -- -- -- --
 
@@ -39,15 +26,14 @@ const exportConfig = {
     total: parseInt(process.env.TOTAL_RECORDS),
 }
 const logger = {
-        error: console.error,
-        warn: console.warn,
-        info: console.log,
-        debug: console.debug,
-    }
-    //const accessToken = 'wiDZ59C5F7wyNtjkXtIdjVKeP9UrqO8s';
+    error: console.error,
+    warn: console.warn,
+    info: console.log,
+    debug: console.debug,
+}
 
 // sunrise data
-const accessToken = process.env.ACCESS_TOKEN; //'Kx0VUukZm0kCl6kBzD1-3nt-xqKmORFC'
+const accessToken = process.env.ACCESS_TOKEN;
 
 const productExporter = new ProductExporter.default(
     apiConfig,
