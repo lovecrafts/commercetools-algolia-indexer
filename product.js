@@ -3,7 +3,8 @@ import fs from 'fs'
 import algoliasearch from 'algoliasearch'
 const client = algoliasearch('RA46FT2Q5G', '69a1fff0143c7121bc2f35825680b272')
 const index = client.initIndex('CTL-VueStoredata-experiment-products')
-
+import dotenv from "dotenv";
+dotenv.config();
 
 const apiConfig = {
 
@@ -22,20 +23,20 @@ const apiConfig = {
     // sunrise project
     // -- -- -- -- -- -- -- -- -- -- --
 
-    apiUrl: 'https://api.us-central1.gcp.commercetools.com',
-    host: 'https://auth.us-central1.gcp.commercetools.com',
-    authUrl: 'https://auth.us-central1.gcp.commercetools.com',
-    projectKey: 'ccx_sunrise',
+    apiUrl: process.env.API_URL,
+    host: process.env.HOST,
+    authUrl: process.env.AUTH_URL,
+    projectKey: process.env.PROJECT_KEY,
     credentials: {
-        clientId: 'vSpnS-bOTfq4Bcz3EHO5KczW',
-        clientSecret: 'fF4kHHQSVSmuoPBd-ZlNsVPeZrZzVMYu',
+        clientId: process.env.CLIENT_ID,
+        clientSecret: process.env.CLIENT_SECRECT,
     }
 }
 const exportConfig = {
-    batch: 100,
+    batch: 10,
     json: true,
     staged: true,
-    total: 3000,
+    total: 20,
 }
 const logger = {
         error: console.error,
@@ -46,7 +47,7 @@ const logger = {
     //const accessToken = 'wiDZ59C5F7wyNtjkXtIdjVKeP9UrqO8s';
 
 // sunrise data
-const accessToken = 'zIjOoI_das8yZcoOhHt0z-jG5Yid74-V'
+const accessToken = 'Kx0VUukZm0kCl6kBzD1-3nt-xqKmORFC'
 
 const productExporter = new ProductExporter.default(
     apiConfig,
