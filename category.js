@@ -4,14 +4,13 @@ import dotenv from "dotenv";
 dotenv.config();
 const options = {
     apiConfig: {
-
-        apiUrl: process.env.API_URL,
-        host: process.env.HOST,
-        authUrl: process.env.AUTH_URL,
-        projectKey: process.env.PROJECT_KEY,
+        apiUrl: process.env.CT_API_URL,
+        host: process.env.CT_HOST,
+        authUrl: process.env.CT_AUTH_URL,
+        projectKey: process.env.CT_PROJECT_KEY,
         credentials: {
-            clientId: process.env.CLIENT_ID,
-            clientSecret: process.env.CLIENT_SECRECT,
+            clientId: process.env.CT_CLIENT_ID,
+            clientSecret: process.env.CT_CLIENT_SECRECT,
         }
     },
 

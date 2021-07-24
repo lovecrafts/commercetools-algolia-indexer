@@ -3,6 +3,8 @@ import fs from 'fs'
 import algoliasearch from 'algoliasearch'
 import dotenv from "dotenv";
 import path from 'path'
+import zip from 'node-zip'
+import { Console } from 'console';
 dotenv.config();
 const client = algoliasearch(process.env.ALGOLIA_PROJECT_ID, process.env.ALGOLIA_WRITE_KEY)
 const index = client.initIndex(process.env.ALGOLIA_INDEX_NAME)
@@ -11,13 +13,13 @@ const apiConfig = {
     // sunrise project
     // -- -- -- -- -- -- -- -- -- -- --
 
-    apiUrl: process.env.API_URL,
-    host: process.env.HOST,
-    authUrl: process.env.AUTH_URL,
-    projectKey: process.env.PROJECT_KEY,
+    apiUrl: process.env.CT_API_URL,
+    host: process.env.CT_HOST,
+    authUrl: process.env.CT_AUTH_URL,
+    projectKey: process.env.CT_PROJECT_KEY,
     credentials: {
-        clientId: process.env.CLIENT_ID,
-        clientSecret: process.env.CLIENT_SECRECT,
+        clientId: process.env.CT_CLIENT_ID,
+        clientSecret: process.env.CT_CLIENT_SECRECT,
     }
 }
 const exportConfig = {
@@ -34,7 +36,7 @@ const logger = {
 }
 
 // // sunrise data
-const accessToken = process.env.ACCESS_TOKEN;
+const accessToken = process.env.CT_ACCESS_TOKEN;
 
 const CcustomExporter = new customExporter(
     apiConfig,
@@ -43,12 +45,22 @@ const CcustomExporter = new customExporter(
     accessToken,
 )
 var outputStream = fs.createWriteStream('products.txt');
+
 // // Register error listener
 outputStream.on('error', function(v) {
     console.log(v);
 })
-outputStream.on('finish', () => {
+removefiles();
 
+function removefiles() {
+    const jsonsInDir = fs.readdirSync('./data').filter(file => path.extname(file) === '.json');
+    jsonsInDir.forEach(file => {
+        fs.unlinkSync(path.join('./data', file));
+    })
+}
+outputStream.on('finish', function(v) {
+    console.log("Batched files saved");
+    var ziper = new zip();
     const jsonsInDir = fs.readdirSync('./data').filter(file => path.extname(file) === '.json');
     jsonsInDir.forEach(file => {
         var finalproducts = []
@@ -137,35 +149,49 @@ outputStream.on('finish', () => {
 
         }
         if (finalproducts) {
-            console.log(finalproducts.length)
-            sendtoalgolia(path.join('./data', file), path.join('./dest', file), finalproducts);
-
+            sendtoalgolia(path.join('./data', file), path.join('./dest', file), file, finalproducts);
+            ziper.file(file, fs.readFileSync(path.join('./data', file)));
         }
 
     });
-
-
+    var data = ziper.generate({ base64: false, compression: 'DEFLATE' });
+    try {
+        if (!fs.existsSync("./archive")) {
+            fs.mkdirSync('./archive')
+        }
+    } catch (err) {
+        console.error(err)
+    }
+    fs.writeFileSync('./archive/file_' + process.env.CT_PROJECT_KEY + '.zip', data, 'binary');
 })
-async function sendtoalgolia(frompath, topath, finalproducts) {
-    console.log('Sync called')
-    if (await index
-        .saveObjects(finalproducts, { autoGenerateObjectIDIfNotExist: true })
-        .then(() => {
 
-            fs.copyFile(frompath, topath, (err) => {
-                if (err) throw err;
-                fs.unlink(frompath, function() {
-                    // file deleted
-                });
 
-            });
-            finalproducts = []
+async function sendtoalgolia(frompath, topath, filename, finalproducts) {
+    //console.log('Sync called')
+    try {
+        await index
+            .saveObjects(finalproducts, { autoGenerateObjectIDIfNotExist: true })
+            .then(() => {
 
-        })
-        .catch(err => {
-            console.log(err);
-        })) {
-        console.log('success')
+                // fs.copyFile(frompath, topath, (err) => {
+                //     if (err) throw err;
+                // });
+                finalproducts = []
+
+            })
+            .catch(err => {
+                console.log(err);
+            })
+        console.log(filename + ' product pushed to algoliya');
+        // fs.unlinkSync(frompath);
+    } catch {
+        console.log("network error")
     }
 }
+console.time('Indexer');
 CcustomExporter.run(outputStream);
+try {
+    fs.unlinkSync('./categories.txt');
+    fs.unlinkSync('./products.txt');
+} catch (err) {}
+console.timeEnd('Indexer');
