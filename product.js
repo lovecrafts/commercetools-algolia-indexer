@@ -56,7 +56,7 @@ outputStream.on('finish', () => {
         const fileData = fs.readFileSync(path.join('./data', file));
         const products = JSON.parse(fileData.toString());
         var fproducts = [];
-
+        var env_attributes = (process.env.ATTRIBUTES).split(',');
         for (let product of products) {
 
             let k = product.categories.length;
@@ -66,9 +66,9 @@ outputStream.on('finish', () => {
             }
         }
         for (let product of products) {
-            product.color = [];
-            product.commonSize = [];
-            product.Fabric = [];
+            // product.color = [];
+            // product.commonSize = [];
+            // product.Fabric = [];
 
             product.variants.push(product.masterVariant);
             let inc = 0;
@@ -81,25 +81,16 @@ outputStream.on('finish', () => {
                         }
                     }
 
+                    for (let attr of env_attributes) {
+                        product[attr] = [];
+                    }
+
                     for (var attribute of variant.attributes) {
-                        if (attribute.name == "Fabric") {
-                            product.variants[inc].Fabric = attribute.value.key;
-                            if (!product.Fabric.includes(attribute.value.key))
-                                product.Fabric.push(attribute.value.key);
+                        if (env_attributes.includes(attribute.name)) {
+                            product.variants[inc][attribute.name] = attribute.value.key;
+                            if (!product[attribute.name].includes(attribute.value.key))
+                                product[attribute.name].push(attribute.value.key);
                         }
-
-                        if (attribute.name == "color") {
-                            product.variants[inc].color = attribute.value.key;
-                            if (!product.color.includes(attribute.value.key))
-                                product.color.push(attribute.value.key);
-                        }
-
-                        if (attribute.name == "commonSize") {
-                            product.variants[inc].commonSize = attribute.value.key;
-                            if (!product.commonSize.includes(attribute.value.key))
-                                product.commonSize.push(attribute.value.key);
-                        }
-
                     }
                     inc++;
                 }
@@ -127,25 +118,26 @@ outputStream.on('finish', () => {
         for (let product of fproducts) {
             for (let variant of product.variants) {
                 var resultdata = {
-                    parentId: product.id, // I
-                    name: product.name, // I
-                    description: product.description, // I
-                    slug: product.slug, // I
-                    sku: variant.sku, // V
-                    categories: product.categories, // I
-                    hierarchicalCategories: product.hierarchicalCategories, // I                       
-                    color: variant.color, // V
-                    commonSize: variant.commonSize, // V
-                    Fabric: variant.Fabric, // V
-                    price: variant.price, // V
-                    images: variant.images, // V
+                    parentId: product.id,
+                    name: product.name,
+                    description: product.description,
+                    slug: product.slug,
+                    sku: variant.sku,
+                    categories: product.categories,
+                    hierarchicalCategories: product.hierarchicalCategories,
+                    price: variant.price,
+                    images: variant.images,
                 };
+                for (let attr of env_attributes) {
+                    resultdata[attr] = variant[attr];
+                }
                 finalproducts.push(resultdata);
 
             }
 
         }
         if (finalproducts) {
+            console.log(finalproducts.length)
             sendtoalgolia(path.join('./data', file), path.join('./dest', file), finalproducts);
 
         }
@@ -155,7 +147,8 @@ outputStream.on('finish', () => {
 
 })
 async function sendtoalgolia(frompath, topath, finalproducts) {
-    await index
+    console.log('Sync called')
+    if (await index
         .saveObjects(finalproducts, { autoGenerateObjectIDIfNotExist: true })
         .then(() => {
 
@@ -171,6 +164,8 @@ async function sendtoalgolia(frompath, topath, finalproducts) {
         })
         .catch(err => {
             console.log(err);
-        });
+        })) {
+        console.log('success')
+    }
 }
 CcustomExporter.run(outputStream);
