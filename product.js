@@ -26,7 +26,7 @@ const exportConfig = {
     batch: parseInt(process.env.PRODUCTS_PER_BATCH),
     json: true,
     staged: true,
-    total: parseInt(process.env.TOTAL_PRODUCTS),
+
 }
 const logger = {
     error: console.error,
