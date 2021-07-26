@@ -8,7 +8,7 @@
 
  - Provide commercetool tokens & Algolia credentials in .env file
 
- - set up the record count & batch count (batch count should be less than 500 ) in .env file
+ - Set up the batch count (batch count should be less than 500 ) in .env file
 
 ### To run the application
 
