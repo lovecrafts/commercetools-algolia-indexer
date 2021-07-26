@@ -8,7 +8,7 @@
 
  - Provide commercetool tokens & Algolia credentials in .env file
 
- - set up the record count & batch count (batch count should be less than 500 ) in .env file
+ - set up the PRODUCTS_PER_BATCH to a value less than or equal to 500 in .env file
 
  - provide the required attribute name separated by comma
 
