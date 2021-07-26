@@ -1,6 +1,6 @@
 # commercetools-algolia-indexer
 
-### App will fetch data's from commercetools as batches and will export those data's as  batches to Algolia index 
+### App will fetch All product and variant data from commercetools as batches and will export those batches to Algolia index 
 
 ### Follow the steps below to run the application
 
