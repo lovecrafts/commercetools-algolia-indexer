@@ -8,7 +8,8 @@ import { Console } from 'console';
 dotenv.config();
 const client = algoliasearch(process.env.ALGOLIA_PROJECT_ID, process.env.ALGOLIA_WRITE_KEY)
 const index = client.initIndex(process.env.ALGOLIA_INDEX_NAME)
-
+var startBatching = new Date(),
+    endBatching, startConvertion, endConvertion, startSync, batchSync, endSync;
 const apiConfig = {
     // sunrise project
     // -- -- -- -- -- -- -- -- -- -- --
@@ -59,10 +60,14 @@ function removefiles() {
     })
 }
 outputStream.on('finish', function(v) {
-    console.log("Batched files saved");
+    endBatching = new Date() - startBatching;
+
+    console.log("Batch files saved total time taken : %ds", endBatching / 1000);
+    console.log('-----------------------------------------');
     var ziper = new zip();
     const jsonsInDir = fs.readdirSync('./data').filter(file => path.extname(file) === '.json');
     jsonsInDir.forEach(file => {
+        startConvertion = Date();
         var finalproducts = []
         const categories = JSON.parse(fs.readFileSync('categories.json'));
         const fileData = fs.readFileSync(path.join('./data', file));
@@ -78,9 +83,6 @@ outputStream.on('finish', function(v) {
             }
         }
         for (let product of products) {
-            // product.color = [];
-            // product.commonSize = [];
-            // product.Fabric = [];
 
             product.variants.push(product.masterVariant);
             let inc = 0;
@@ -130,6 +132,7 @@ outputStream.on('finish', function(v) {
         for (let product of fproducts) {
             for (let variant of product.variants) {
                 var resultdata = {
+                    //objectID: variant.sku,
                     parentId: product.id,
                     name: product.name,
                     description: product.description,
@@ -149,7 +152,10 @@ outputStream.on('finish', function(v) {
 
         }
         if (finalproducts) {
-            sendtoalgolia(path.join('./data', file), path.join('./dest', file), file, finalproducts);
+            endConvertion = new Date() - startConvertion;
+
+            sendtoalgolia(path.join('./data', file), path.join('./dest', file), file, new Date(), finalproducts);
+
             ziper.file(file, fs.readFileSync(path.join('./data', file)));
         }
 
@@ -166,32 +172,36 @@ outputStream.on('finish', function(v) {
 })
 
 
-async function sendtoalgolia(frompath, topath, filename, finalproducts) {
+async function sendtoalgolia(frompath, topath, filename, starttime, finalproducts) {
     //console.log('Sync called')
     try {
+        startSync = new Date();
         await index
             .saveObjects(finalproducts, { autoGenerateObjectIDIfNotExist: true })
             .then(() => {
-
-                // fs.copyFile(frompath, topath, (err) => {
-                //     if (err) throw err;
-                // });
+                endSync = new Date() - startBatching;
+                console.log(filename + " sync time: " + (endBatching + endSync) / 1000 + 's' + '\n')
+                    // fs.copyFile(frompath, topath, (err) => {
+                    //     if (err) throw err;
+                    // });
                 finalproducts = []
 
             })
             .catch(err => {
+
                 console.log(err);
             })
-        console.log(filename + ' product pushed to algoliya');
+
+        // console.log(filename + ' product pushed to algolia');
         // fs.unlinkSync(frompath);
     } catch {
         console.log("network error")
     }
 }
-console.time('Indexer');
+console.time('Indexer code execution time:');
 CcustomExporter.run(outputStream);
 try {
     fs.unlinkSync('./categories.txt');
     fs.unlinkSync('./products.txt');
 } catch (err) {}
-console.timeEnd('Indexer');
+console.timeEnd('Indexer code execution time:');

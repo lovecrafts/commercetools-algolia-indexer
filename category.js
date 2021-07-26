@@ -140,15 +140,15 @@ outputStream.on('finish', () => {
             if (err) {
                 return console.log(err);
             }
-            console.log("The file was saved!");
+            //console.log("The file was saved!");
         });
         fs.writeFile('finalcategories.json', JSON.stringify(finalcategories), 'utf8', function(err) {
             if (err) {
                 return console.log(err);
             }
-            console.log("The file was saved!");
+            //console.log("The file was saved!");
         });
-        console.log('done with export')
+        //console.log('done with export')
     })
 })
 

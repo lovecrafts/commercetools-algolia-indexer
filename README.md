@@ -1,6 +1,6 @@
 # commercetools-algolia-indexer
 
-### App will fetch data's from commercetool as batches and will export those data's as  batches to Algolia index 
+### App will fetch data's from commercetools as batches and will export those data's as  batches to Algolia index 
 
 ### Follow the steps below to run the application
 
@@ -8,7 +8,9 @@
 
  - Provide commercetool tokens & Algolia credentials in .env file
 
- - Set up the batch count (batch count should be less than 500 ) in .env file
+ - set up the record count & batch count (batch count should be less than 500 ) in .env file
+
+ - provide the required attribute name separated by comma
 
 ### To run the application
 

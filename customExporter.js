@@ -41,11 +41,11 @@ export default class customExporter {
     }
 
     run(outputStream) {
-        this.logger.debug('Starting Export');
+        //this.logger.debug('Starting Export');
 
         const formattedStream = customExporter._getStream('json');
 
-        this.logger.debug('Preparing outputStream');
+        //this.logger.debug('Preparing outputStream');
         formattedStream.pipe(outputStream);
         return this._getProducts(formattedStream).catch(e => {
             this.logger.error(e, 'Oops. Something went wrong');
@@ -54,7 +54,7 @@ export default class customExporter {
     }
 
     _getProducts(outputStream) {
-        this.logger.debug('Building request');
+        //this.logger.debug('Building request');
         let count = 1;
         const uri = customExporter._buildProductProjectionsUri(this.apiConfig.projectKey, this.exportConfig);
 
@@ -69,17 +69,17 @@ export default class customExporter {
             accumulate: false
         };
         if (this.exportConfig.total) processConfig.total = this.exportConfig.total;
-        this.logger.debug('Dispatching request');
+        //this.logger.debug('Dispatching request');
         return this.client.process(request, ({
             body: {
                 results: products
             }
         }) => {
-            this.logger.debug(`Fetched ${products.length} products`);
+            //this.logger.debug(`Fetched ${products.length} products`);
 
             customExporter._writeEachProduct(outputStream, products);
 
-            this.logger.debug(`${products.length} products written to outputStream`);
+            //this.logger.debug(`${products.length} products written to outputStream`);
 
             if (products.length < 1) {
                 return Promise.reject(Error('No products found'));
@@ -89,14 +89,15 @@ export default class customExporter {
                 if (err) {
                     console.log('Error writing file', err)
                 } else {
-                    console.log('Successfully wrote file')
+                    //console.log('Successfully wrote file')
                 }
             })
 
             return Promise.resolve();
         }, processConfig).then(() => {
             outputStream.end();
-            this.logger.info('Export operation completed successfully');
+            //this.logger.info('Export operation completed successfully');
+            this.logger.info('-----------------------------------------');
         });
     }
 
