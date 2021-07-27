@@ -2,6 +2,9 @@ import CategoryExporter from "@commercetools/category-exporter"
 import fs from 'fs'
 import dotenv from "dotenv";
 dotenv.config();
+import { sendtoalgolia } from './pushToAlgolia.js'
+var startBatching = new Date(),
+    endBatching, startConvertion, endConvertion, startSync, batchSync, endSync;
 const options = {
     apiConfig: {
         apiUrl: process.env.CT_API_URL,
@@ -31,13 +34,14 @@ outputStream.on('error', function(v) {
 })
 
 outputStream.on('finish', () => {
+    endBatching = new Date() - startBatching;
+    startConvertion = Date();
     fs.readFile('categories.txt', 'utf8', (err, data) => {
         if (err) {
             console.error(err)
             return
         }
         var res = JSON.parse(data);
-
         var parent = res;
         var finalcategories = [];
         for (let obj of parent) {
@@ -45,8 +49,7 @@ outputStream.on('finish', () => {
             category.id = obj.id;
             category.version = obj.version;
             category.name = obj.name;
-            //category.slug = obj.slug;
-            //category.ancestors = obj.ancestors;
+            category.objectID = obj.id;
             let lang = ['en', 'de', 'it'];
             let i = 0;
             if (obj.ancestors.length != 0) {
@@ -102,7 +105,6 @@ outputStream.on('finish', () => {
             parent_object.id = category.id;
             parent_object.name = category.name.en;
             parent_object.slug = category.slug.en
-                //console.log(category, 'category')
             let slug_url_str = "";
             let cat_url_str = "";
             for (let cat_slug_level of category.ancestors) {
@@ -115,7 +117,7 @@ outputStream.on('finish', () => {
             }
             slug_url_str += category.slug.en;
             cat_url_str += category.name.en
-                //console.log(slug_url_str)
+
             for (let cat_level of category.ancestors) {
                 var cat_parent = res.filter(obj => obj.id == cat_level.id);
                 let str = "lvl" + i;
@@ -126,7 +128,7 @@ outputStream.on('finish', () => {
                 i++;
             }
             jsonVariable['lvl' + i] = rootstr + category.name.en;
-            //console.log(rootstr + category.name.en)
+
             object.push(jsonVariable);
             parent_object.categories = object;
             parent_object.categories_level = i;
@@ -136,22 +138,28 @@ outputStream.on('finish', () => {
             categories.push(parent_object);
 
         }
+
         fs.writeFile('categories.json', JSON.stringify(categories), 'utf8', function(err) {
             if (err) {
                 return console.log(err);
             }
-            //console.log("The file was saved!");
+
         });
-        fs.writeFile('finalcategories.json', JSON.stringify(finalcategories), 'utf8', function(err) {
-            if (err) {
-                return console.log(err);
-            }
-            //console.log("The file was saved!");
-        });
-        //console.log('done with export')
+        if (finalcategories) {
+            endConvertion = new Date() - startConvertion;
+            sendtoalgolia(startBatching, endBatching, endSync, 'category', 'categories.json', finalcategories, process.env.ALGOLIA_CATEGORY_INDEX_NAME)
+                // fs.writeFile('finalcategories.json', JSON.stringify(finalcategories), 'utf8', function(err) {
+                //     if (err) {
+                //         return console.log(err);
+                //     }
+
+            // });
+        }
     })
 })
 
-
-
-categoryExporter.run(outputStream)
+console.log("Category Indexer Executing ..." + '\n')
+console.time('Category Indexer code execution time:');
+categoryExporter.run(outputStream);
+console.timeEnd('Category Indexer code execution time:');
+console.log("-----------------------------------------------");

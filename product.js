@@ -1,19 +1,15 @@
-import customExporter from './customExporter.js'
-import fs from 'fs'
-import algoliasearch from 'algoliasearch'
+import customExporter from './customExporter.js';
+import fs from 'fs';
 import dotenv from "dotenv";
-import path from 'path'
-import zip from 'node-zip'
-import { Console } from 'console';
+import path from 'path';
+import zip from 'node-zip';
+
+import { sendtoalgolia } from './pushToAlgolia.js'
 dotenv.config();
-const client = algoliasearch(process.env.ALGOLIA_PROJECT_ID, process.env.ALGOLIA_WRITE_KEY)
-const index = client.initIndex(process.env.ALGOLIA_INDEX_NAME)
+
 var startBatching = new Date(),
     endBatching, startConvertion, endConvertion, startSync, batchSync, endSync;
 const apiConfig = {
-    // sunrise project
-    // -- -- -- -- -- -- -- -- -- -- --
-
     apiUrl: process.env.CT_API_URL,
     host: process.env.CT_HOST,
     authUrl: process.env.CT_AUTH_URL,
@@ -27,6 +23,7 @@ const exportConfig = {
     batch: parseInt(process.env.PRODUCTS_PER_BATCH),
     json: true,
     staged: true,
+    expand: ['description']
 
 }
 const logger = {
@@ -36,7 +33,6 @@ const logger = {
     debug: console.debug,
 }
 
-// // sunrise data
 const accessToken = process.env.CT_ACCESS_TOKEN;
 
 const CcustomExporter = new customExporter(
@@ -83,7 +79,6 @@ outputStream.on('finish', function(v) {
             }
         }
         for (let product of products) {
-
             product.variants.push(product.masterVariant);
             let inc = 0;
             if (product.variants) {
@@ -132,7 +127,7 @@ outputStream.on('finish', function(v) {
         for (let product of fproducts) {
             for (let variant of product.variants) {
                 var resultdata = {
-                    //objectID: variant.sku,
+                    objectID: variant.sku,
                     parentId: product.id,
                     name: product.name,
                     description: product.description,
@@ -154,8 +149,8 @@ outputStream.on('finish', function(v) {
         if (finalproducts) {
             endConvertion = new Date() - startConvertion;
 
-            sendtoalgolia(path.join('./data', file), path.join('./dest', file), file, new Date(), finalproducts);
-
+            sendtoalgolia(startBatching, endBatching, endSync, 'Product', file, finalproducts, process.env.ALGOLIA_PRODUCTS_INDEX_NAME);
+            finalproducts = []
             ziper.file(file, fs.readFileSync(path.join('./data', file)));
         }
 
@@ -170,38 +165,11 @@ outputStream.on('finish', function(v) {
     }
     fs.writeFileSync('./archive/file_' + process.env.CT_PROJECT_KEY + '.zip', data, 'binary');
 })
-
-
-async function sendtoalgolia(frompath, topath, filename, starttime, finalproducts) {
-    //console.log('Sync called')
-    try {
-        startSync = new Date();
-        await index
-            .saveObjects(finalproducts, { autoGenerateObjectIDIfNotExist: true })
-            .then(() => {
-                endSync = new Date() - startBatching;
-                console.log(filename + " sync time: " + (endBatching + endSync) / 1000 + 's' + '\n')
-                    // fs.copyFile(frompath, topath, (err) => {
-                    //     if (err) throw err;
-                    // });
-                finalproducts = []
-
-            })
-            .catch(err => {
-
-                console.log(err);
-            })
-
-        // console.log(filename + ' product pushed to algolia');
-        // fs.unlinkSync(frompath);
-    } catch {
-        console.log("network error")
-    }
-}
-console.time('Indexer code execution time:');
+console.log("Product Indexer Executing ..." + '\n')
+console.time('Product Indexer code execution time:');
 CcustomExporter.run(outputStream);
 try {
     fs.unlinkSync('./categories.txt');
     fs.unlinkSync('./products.txt');
 } catch (err) {}
-console.timeEnd('Indexer code execution time:');
+console.timeEnd('Product Indexer code execution time:');
