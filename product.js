@@ -8,7 +8,7 @@ import { sendtoalgolia } from './pushToAlgolia.js'
 dotenv.config();
 
 var startBatching = new Date(),
-    endBatching, startConvertion, endSync;
+    endBatching, startConvertion, endConvertion, endSync;
 const apiConfig = {
     apiUrl: process.env.CT_API_URL,
     host: process.env.CT_HOST,
@@ -24,7 +24,6 @@ const exportConfig = {
     json: true,
     staged: true,
     expand: [process.env.PRODUCT_ATTRIBUTES],
-    total: 2
 
 }
 const logger = {
