@@ -8,7 +8,7 @@ import { sendtoalgolia } from './pushToAlgolia.js'
 dotenv.config();
 
 var startBatching = new Date(),
-    endBatching, startConvertion, endConvertion, startSync, batchSync, endSync;
+    endBatching, startConvertion, endSync;
 const apiConfig = {
     apiUrl: process.env.CT_API_URL,
     host: process.env.CT_HOST,
@@ -23,7 +23,8 @@ const exportConfig = {
     batch: parseInt(process.env.PRODUCTS_PER_BATCH),
     json: true,
     staged: true,
-    expand: ['description']
+    expand: [process.env.PRODUCT_ATTRIBUTES],
+    total: 2
 
 }
 const logger = {
@@ -69,7 +70,7 @@ outputStream.on('finish', function(v) {
         const fileData = fs.readFileSync(path.join('./data', file));
         const products = JSON.parse(fileData.toString());
         var fproducts = [];
-        var env_attributes = (process.env.ATTRIBUTES).split(',');
+        var env_attributes = (process.env.VARIENT_ATTRIBUTES).split(',');
         for (let product of products) {
 
             let k = product.categories.length;
