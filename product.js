@@ -25,6 +25,7 @@ const exportConfig = {
     staged: true,
     expand: [process.env.PRODUCT_ATTRIBUTES],
 
+
 }
 const logger = {
     error: console.error,
@@ -68,6 +69,7 @@ outputStream.on('finish', function(v) {
         const categories = JSON.parse(fs.readFileSync('categories.json'));
         const fileData = fs.readFileSync(path.join('./data', file));
         const products = JSON.parse(fileData.toString());
+        var env_languages = (process.env.LANGUAGES).split(',');
         var fproducts = [];
         var env_attributes = (process.env.VARIENT_ATTRIBUTES).split(',');
         for (let product of products) {
@@ -79,6 +81,13 @@ outputStream.on('finish', function(v) {
             }
         }
         for (let product of products) {
+            product.alter_categories = {};
+            product.hierarchicalCategories = {};
+            for (let lan of env_languages) {
+                product.alter_categories[lan] = [];
+                product.hierarchicalCategories[lan] = [];
+            }
+
             product.variants.push(product.masterVariant);
             let inc = 0;
             if (product.variants) {
@@ -108,21 +117,18 @@ outputStream.on('finish', function(v) {
 
             let j = 0;
             let k = product.categories.length;
+
             for (let cat of product.categories) {
                 if (cat) {
-                    var obj = categories.filter(x => x.id == cat.id)[0];
-                    product.categories[j].slug = obj.slugURL;
-                    product.categories[j]['lvl' + (k != 0 ? k - 1 : k)] = obj.categoryURL;
-                    j++;
-                    k--;
+                    let cat_data = categories.filter(x => x.id == cat.id)[0];
+                    for (let lan of env_languages) {
+                        product.alter_categories[lan].push({ slug: cat_data.categories[lan].slug });
+                        product.hierarchicalCategories[lan].push(cat_data.hierarchicalCategories[lan]);
+                    }
                 }
             }
-            if (product.categories[0]) {
-                var h_categories = categories.filter(x => product.categories[0].id == x.id)[0].categories;
-                product.hierarchicalCategories = h_categories;
-            } else
-                product.hierarchicalCategories = [];
             fproducts.push(product);
+
         }
         for (let product of fproducts) {
             for (let variant of product.variants) {
@@ -133,7 +139,7 @@ outputStream.on('finish', function(v) {
                     description: product.description,
                     slug: product.slug,
                     sku: variant.sku,
-                    categories: product.categories,
+                    categories: product.alter_categories,
                     hierarchicalCategories: product.hierarchicalCategories,
                     price: variant.price,
                     images: variant.images,

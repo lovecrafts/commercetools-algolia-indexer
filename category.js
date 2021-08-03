@@ -41,10 +41,9 @@ outputStream.on('finish', () => {
             console.error(err)
             return
         }
-        var res = JSON.parse(data);
-        var parent = res;
+        var categories = JSON.parse(data);
         var finalcategories = [];
-        for (let obj of parent) {
+        for (let obj of categories) {
             var category = {};
             category.id = obj.id;
             category.version = obj.version;
@@ -58,7 +57,7 @@ outputStream.on('finish', () => {
             }
 
             for (let cat_obj of obj.ancestors) {
-                var cat = res.filter(x => x.id == cat_obj.id)[0];
+                var cat = categories.filter(x => x.id == cat_obj.id)[0];
                 for (let lan of lang) {
 
                     if (category.path[lan] != "") {
@@ -95,51 +94,52 @@ outputStream.on('finish', () => {
             finalcategories.push(category)
 
         }
-        var categories = [];
-        for (let category of parent) {
-            var parent_object = {};
-            var object = [];
-            let i = 0;
-            let rootstr = "";
-            var jsonVariable = {};
-            parent_object.id = category.id;
-            parent_object.name = category.name.en;
-            parent_object.slug = category.slug.en
-            let slug_url_str = "";
-            let cat_url_str = "";
-            for (let cat_slug_level of category.ancestors) {
-                var cat_slug = res.filter(obj => obj.id == cat_slug_level.id)[0];
-                //console.log(cat_slug, 'cat_slug')
-                slug_url_str += cat_slug.slug.en;
-                cat_url_str += cat_slug.name.en;
-                slug_url_str += '/';
-                cat_url_str += ' > '
+
+        var env_languages = (process.env.LANGUAGES).split(',');
+        var resultcategories = [];
+        for (let category of categories) {
+            var _resultObject = {};
+            _resultObject.id = category.id;
+            _resultObject.categories = {};
+            _resultObject.hierarchicalCategories = {};
+            for (let lan of env_languages) {
+                _resultObject.categories[lan] = {};
+                _resultObject.hierarchicalCategories[lan] = {};
             }
-            slug_url_str += category.slug.en;
-            cat_url_str += category.name.en
+            category.ancestors.push({ typeId: 'category', id: category.id });
 
-            for (let cat_level of category.ancestors) {
-                var cat_parent = res.filter(obj => obj.id == cat_level.id);
-                let str = "lvl" + i;
-                rootstr += cat_parent[0].name.en;
-                jsonVariable[str] = rootstr;
-                jsonVariable['lvl' + i] = rootstr;
-                rootstr += ' > '
-                i++;
+            for (let lan of env_languages) {
+                let slug_str = "";
+                let path_str = "";
+                let path_str_hie = "";
+                let level = 0;
+                for (let ancestor of category.ancestors) {
+                    let _cat_obj = categories.filter(x => x.id === ancestor.id)[0];
+
+                    if (slug_str == "") {
+                        slug_str = _cat_obj.slug[lan];
+                        path_str = _cat_obj.name[lan];
+                        path_str_hie = _cat_obj.name[lan];
+
+                    } else {
+                        slug_str += ' / ' + _cat_obj.slug[lan];
+                        path_str += ' > ' + _cat_obj.name[lan];
+                        path_str_hie += ' > ' + _cat_obj.name[lan];
+                    }
+                    _resultObject.hierarchicalCategories[lan]['lvl' + level] = path_str_hie;
+
+                    level++;
+                }
+                _resultObject.hierarchicalCategories[lan]
+
+                _resultObject.categories[lan]['slug'] = slug_str;
+                _resultObject.categories[lan]['path'] = path_str;
+
             }
-            jsonVariable['lvl' + i] = rootstr + category.name.en;
-
-            object.push(jsonVariable);
-            parent_object.categories = object;
-            parent_object.categories_level = i;
-            parent_object.slugURL = slug_url_str;
-            parent_object.categoryURL = cat_url_str;
-            parent_object.parent = category.parent;
-            categories.push(parent_object);
-
+            resultcategories.push(_resultObject)
         }
 
-        fs.writeFile('categories.json', JSON.stringify(categories), 'utf8', function(err) {
+        fs.writeFile('categories.json', JSON.stringify(resultcategories), 'utf8', function(err) {
             if (err) {
                 return console.log(err);
             }
