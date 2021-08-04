@@ -70,7 +70,7 @@ outputStream.on('finish', () => {
                         slug_str = cat.slug[lan];
                         path_str = cat.name[lan];
                     } else {
-                        slug_str += ' / ' + cat.slug[lan];
+                        slug_str += '/' + cat.slug[lan];
                         path_str += ' > ' + cat.name[lan];
                     }
                 }
@@ -108,7 +108,7 @@ outputStream.on('finish', () => {
                         path_str_hie = _cat_obj.name[lan];
 
                     } else {
-                        slug_str += ' / ' + _cat_obj.slug[lan];
+                        slug_str += '/' + _cat_obj.slug[lan];
                         path_str += ' > ' + _cat_obj.name[lan];
                         path_str_hie += ' > ' + _cat_obj.name[lan];
                     }
