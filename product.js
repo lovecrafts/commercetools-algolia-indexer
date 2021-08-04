@@ -73,13 +73,13 @@ outputStream.on('finish', function(v) {
         var fproducts = [];
         var env_attributes = (process.env.VARIENT_ATTRIBUTES).split(',');
         for (let product of products) {
-
             let k = product.categories.length;
             if (k != 0) {
                 let parent_cat = categories.filter(x => x.id == product.categories[(k != 0 ? k - 1 : k)].id)[0];
                 product.categories.push(parent_cat.parent);
             }
         }
+
         for (let product of products) {
             product.alter_categories = {};
             product.hierarchicalCategories = {};

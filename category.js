@@ -49,47 +49,33 @@ outputStream.on('finish', () => {
             category.version = obj.version;
             category.name = obj.name;
             category.objectID = obj.id;
-            let lang = ['en', 'de', 'it'];
+            category.path = {};
+            category.slug = {};
+            let env_languages = (process.env.LANGUAGES).split(',');
             let i = 0;
+            obj.ancestors.push({ typeId: 'category', id: obj.id });
             if (obj.ancestors.length != 0) {
-                category.path = { en: "", de: "", it: "" }
-                category.slug = { en: "", de: "", it: "" }
-            }
-
-            for (let cat_obj of obj.ancestors) {
-                var cat = categories.filter(x => x.id == cat_obj.id)[0];
-                for (let lan of lang) {
-
-                    if (category.path[lan] != "") {
-                        category.path[lan] += ' > ';
-                        category.slug[lan] += '/'
-                    }
-                    category.path[lan] += cat.name[lan]
-                    category.slug[lan] += cat.slug[lan]
-
+                for (let lan of env_languages) {
+                    category.path[lan] = '';
+                    category.slug[lan] = '';
                 }
             }
 
-            if (category.path) {
-                category.path.en += ' > ' + obj.name.en;
-                if (category.path['de'] != "")
-                    category.path.de += ' > ';
-                category.path.de += obj.name.de;
-                category.path.it += ' > ' + obj.name.it;
-            } else {
-                category.path = category.name;
-                // console.log(category);
-            }
+            for (let lan of env_languages) {
+                let path_str, slug_str = "";
+                for (let _cat_obj of obj.ancestors) {
+                    var cat = categories.filter(x => x.id == _cat_obj.id)[0];
 
-            if (category.slug) {
-                category.slug.en += '/' + obj.slug.en;
-                if (category.slug['de'] != "")
-                    category.slug.de += '/';
-                category.slug.de += obj.slug.de;
-                category.slug.it += '/' + obj.slug.it;
-            } else {
-
-                category.slug = obj.slug;
+                    if (slug_str == "") {
+                        slug_str = cat.slug[lan];
+                        path_str = cat.name[lan];
+                    } else {
+                        slug_str += ' / ' + cat.slug[lan];
+                        path_str += ' > ' + cat.name[lan];
+                    }
+                }
+                category.slug[lan] = slug_str;
+                category.path[lan] = path_str;
             }
             finalcategories.push(category)
 
