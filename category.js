@@ -92,8 +92,6 @@ outputStream.on('finish', () => {
                 _resultObject.categories[lan] = {};
                 _resultObject.hierarchicalCategories[lan] = {};
             }
-            category.ancestors.push({ typeId: 'category', id: category.id });
-
             for (let lan of env_languages) {
                 let slug_str = "";
                 let path_str = "";
