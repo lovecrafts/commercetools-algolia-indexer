@@ -1,5 +1,6 @@
 import customExporter from './customExporter.js';
 import fs from 'fs';
+import fse from 'fs-extra'
 import dotenv from "dotenv";
 import path from 'path';
 import zip from 'node-zip';
@@ -48,120 +49,129 @@ var outputStream = fs.createWriteStream('products.txt');
 outputStream.on('error', function(v) {
     console.log(v);
 })
-removefiles();
 
-function removefiles() {
-    const jsonsInDir = fs.readdirSync('./data').filter(file => path.extname(file) === '.json');
-    jsonsInDir.forEach(file => {
-        fs.unlinkSync(path.join('./data', file));
-    })
-}
+fse.emptyDirSync('./data');
+
+// Array.prototype.forEachAsync = async function (fn) {
+//     for (let t of this) { await fn(t) }
+// }
 outputStream.on('finish', function(v) {
     endBatching = new Date() - startBatching;
 
     console.log("Batch files saved total time taken : %ds", endBatching / 1000);
     console.log('-----------------------------------------');
-    var ziper = new zip();
+    let ziper = new zip();
     const jsonsInDir = fs.readdirSync('./data').filter(file => path.extname(file) === '.json');
+    const categories = JSON.parse(fs.readFileSync('categories.json'));
     jsonsInDir.forEach(file => {
         startConvertion = Date();
-        var finalproducts = []
-        const categories = JSON.parse(fs.readFileSync('categories.json'));
-        const fileData = fs.readFileSync(path.join('./data', file));
-        const products = JSON.parse(fileData.toString());
-        var env_languages = (process.env.LANGUAGES).split(',');
-        var fproducts = [];
-        var env_attributes = (process.env.VARIENT_ATTRIBUTES).split(',');
-        for (let product of products) {
-            let k = product.categories.length;
-            if (k != 0) {
-                let parent_cat = categories.filter(x => x.id == product.categories[(k != 0 ? k - 1 : k)].id)[0];
-                product.categories.push(parent_cat.parent);
-            }
-        }
-
-        for (let product of products) {
-            product.alter_categories = {};
-            product.hierarchicalCategories = {};
-            for (let lan of env_languages) {
-                product.alter_categories[lan] = [];
-                product.hierarchicalCategories[lan] = [];
+        let finalproducts = [];
+        try {
+            const fileData = fs.readFileSync(path.join('./data', file));
+            //if (fileData) {
+            const products = JSON.parse(fileData.toString());
+            let env_languages = (process.env.LANGUAGES).split(',');
+            let fproducts = [];
+            let env_attributes = (process.env.VARIENT_ATTRIBUTES).split(',');
+            for (let product of products) {
+                let k = product.categories.length;
+                if (k != 0) {
+                    let parent_cat = categories.filter(x => x.id == product.categories[(k != 0 ? k - 1 : k)].id)[0];
+                    product.categories.push(parent_cat.parent);
+                }
             }
 
-            product.variants.push(product.masterVariant);
-            let inc = 0;
-            if (product.variants) {
-                for (var variant of product.variants) {
-                    if (variant.prices) {
-                        for (let price of variant.prices) {
-                            if (price.value.currencyCode == "USD")
-                                product.variants[inc].price = price.value;
+            for (let product of products) {
+                product.alter_categories = {};
+                product.hierarchicalCategories = {};
+                for (let lan of env_languages) {
+                    product.alter_categories[lan] = [];
+                    product.hierarchicalCategories[lan] = [];
+                }
+
+                product.variants.push(product.masterVariant);
+                let inc = 0;
+                if (product.variants) {
+                    for (let variant of product.variants) {
+                        if (variant.prices) {
+                            for (let price of variant.prices) {
+                                if (price.value.currencyCode == "USD")
+                                    product.variants[inc].price = price.value;
+                            }
+                        }
+
+                        for (let attr of env_attributes) {
+                            product[attr] = [];
+                        }
+
+                        for (let attribute of variant.attributes) {
+                            if (env_attributes.includes(attribute.name)) {
+                                product.variants[inc][attribute.name] = attribute.value.key;
+                                if (!product[attribute.name].includes(attribute.value.key))
+                                    product[attribute.name].push(attribute.value.key);
+                            }
+                        }
+                        inc++;
+                    }
+                    product.variants.sort((a, b) => a.id - b.id);
+                }
+
+                let j = 0;
+                let k = product.categories.length;
+
+                for (let cat of product.categories) {
+                    if (cat) {
+                        let cat_data = categories.filter(x => x.id == cat.id)[0];
+                        for (let lan of env_languages) {
+                            product.alter_categories[lan].push({ slug: cat_data.categories[lan].slug });
+                            product.hierarchicalCategories[lan].push(cat_data.hierarchicalCategories[lan]);
                         }
                     }
+                }
+                fproducts.push(product);
 
+            }
+
+            for (let product of fproducts) {
+                for (let variant of product.variants) {
+                    let resultdata = {
+                        objectID: variant.sku,
+                        parentId: product.id,
+                        name: product.name,
+                        description: product.description,
+                        slug: product.slug,
+                        sku: variant.sku,
+                        categories: product.alter_categories,
+                        hierarchicalCategories: product.hierarchicalCategories,
+                        price: variant.price,
+                        images: variant.images,
+                    };
                     for (let attr of env_attributes) {
-                        product[attr] = [];
+                        resultdata[attr] = variant[attr];
                     }
-
-                    for (var attribute of variant.attributes) {
-                        if (env_attributes.includes(attribute.name)) {
-                            product.variants[inc][attribute.name] = attribute.value.key;
-                            if (!product[attribute.name].includes(attribute.value.key))
-                                product[attribute.name].push(attribute.value.key);
-                        }
-                    }
-                    inc++;
+                    finalproducts.push(resultdata);
+                    //sendtoalgolia(startBatching, endBatching, endSync, 'Product', file, finalproducts, process.env.ALGOLIA_PRODUCTS_INDEX_NAME);
+                    //finalproducts = [];
                 }
-                product.variants.sort((a, b) => a.id - b.id);
-            }
-
-            let j = 0;
-            let k = product.categories.length;
-
-            for (let cat of product.categories) {
-                if (cat) {
-                    let cat_data = categories.filter(x => x.id == cat.id)[0];
-                    for (let lan of env_languages) {
-                        product.alter_categories[lan].push({ slug: cat_data.categories[lan].slug });
-                        product.hierarchicalCategories[lan].push(cat_data.hierarchicalCategories[lan]);
-                    }
-                }
-            }
-            fproducts.push(product);
-
-        }
-        for (let product of fproducts) {
-            for (let variant of product.variants) {
-                var resultdata = {
-                    objectID: variant.sku,
-                    parentId: product.id,
-                    name: product.name,
-                    description: product.description,
-                    slug: product.slug,
-                    sku: variant.sku,
-                    categories: product.alter_categories,
-                    hierarchicalCategories: product.hierarchicalCategories,
-                    price: variant.price,
-                    images: variant.images,
-                };
-                for (let attr of env_attributes) {
-                    resultdata[attr] = variant[attr];
-                }
-                finalproducts.push(resultdata);
 
             }
+            if (finalproducts.length) {
+                endConvertion = new Date() - startConvertion;
 
+                sendtoalgolia(startBatching, endBatching, endSync, 'Product', file, finalproducts, process.env.ALGOLIA_PRODUCTS_INDEX_NAME);
+                finalproducts = []
+                ziper.file(file, fs.readFileSync(path.join('./data', file)));
+            }
+            //}
+        } catch (err) {
+            console.log("file empty or undefined");
+            // continue;
         }
-        if (finalproducts) {
-            endConvertion = new Date() - startConvertion;
 
-            sendtoalgolia(startBatching, endBatching, endSync, 'Product', file, finalproducts, process.env.ALGOLIA_PRODUCTS_INDEX_NAME);
-            finalproducts = []
-            ziper.file(file, fs.readFileSync(path.join('./data', file)));
-        }
 
     });
     var data = ziper.generate({ base64: false, compression: 'DEFLATE' });
+
     try {
         if (!fs.existsSync("./archive")) {
             fs.mkdirSync('./archive')
@@ -170,12 +180,13 @@ outputStream.on('finish', function(v) {
         console.error(err)
     }
     fs.writeFileSync('./archive/file_' + process.env.CT_PROJECT_KEY + '.zip', data, 'binary');
+    try {
+        fs.unlinkSync('./categories.txt');
+        fs.unlinkSync('./products.txt');
+    } catch (err) {}
 })
 console.log("Product Indexer Executing ..." + '\n')
 console.time('Product Indexer code execution time:');
 CcustomExporter.run(outputStream);
-try {
-    fs.unlinkSync('./categories.txt');
-    fs.unlinkSync('./products.txt');
-} catch (err) {}
+
 console.timeEnd('Product Indexer code execution time:');
