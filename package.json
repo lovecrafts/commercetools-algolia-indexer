@@ -33,5 +33,8 @@
         "npm": "^7.20.1",
         "require": "^0.4.4",
         "stream-json": "^1.7.2"
+    },
+    "devDependencies": {
+        "prettier": "^1.16.4"
     }
 }

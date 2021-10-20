@@ -1,3 +1,7 @@
+.vscode
+*.code-workspace
+package-lock.json
+
 # Logs
 logs
 *.log
