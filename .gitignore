@@ -1,3 +1,14 @@
+.vscode
+*.code-workspace
+# temp files and debugging
+data
+archive
+algolia_product_import
+algolia_category_import.json
+ct_category_export.json
+ct_product_export.json
+product_importer_categories.json
+
 # Logs
 logs
 *.log
